@@ -1,0 +1,138 @@
+﻿@page "/"
+
+@using PolygonDrawer.Models
+@using PolygonDrawer.Controllers
+
+<canvas id="polygonCanvas" width="1000" height="640" style="border:1px solid black;" @onclick="OnCanvasLeftClicked"
+    @oncontextmenu="OnCanvasRightClicked"></canvas>
+
+<button @onclick="OnNextButtonClicked">Next</button>
+<button @onclick="OnClearButtonClicked">Clear</button>
+
+@code {
+    private Vertex? _firstVertex;
+    private Vertex? _previousVertex;
+
+    [Inject] public required IJSRuntime JSRuntime { get; set; }
+    [Inject] public required PolygonProcessor PolygonProcessor { get; set; }
+
+    private PolygonProcessor.ProcesssingState State => PolygonProcessor.State;
+    private bool IsFirstVertex => _firstVertex == null;
+
+    private string Color => State switch
+    {
+        PolygonProcessor.ProcesssingState.DrawingMainPolygon => "black",
+        PolygonProcessor.ProcesssingState.DrawingClipPolygon => "red",
+        PolygonProcessor.ProcesssingState.ClippingComplete => "green",
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    private void OnCanvasLeftClicked(MouseEventArgs e)
+    {
+        // 左键点击添加顶点
+        if (e.Button == 0) // 0 表示左键
+        {
+            var vertex = new Vertex(e.ClientX, e.ClientY);
+
+            try
+            {
+                PolygonProcessor.AddVertex(vertex);
+
+                if (IsFirstVertex)
+                {
+                    _firstVertex = vertex;
+                    _previousVertex = vertex;
+                }
+                else
+                {
+                    DrawLine(_previousVertex!, vertex);
+                    _previousVertex = vertex;
+                }
+                DrawPoint(vertex);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ShowErrorMessage(ex.Message);
+                OnClearButtonClicked();
+            }
+        }
+    }
+
+    private void OnCanvasRightClicked()
+    {
+        // 右键点击闭合多边形
+        try
+        {
+            PolygonProcessor.ClosePolygon();
+
+            DrawLine(_previousVertex!, _firstVertex!);
+            _firstVertex = null;
+            _previousVertex = null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            ShowErrorMessage(ex.Message);
+            OnClearButtonClicked();
+        }
+    }
+
+    private void OnNextButtonClicked()
+    {
+        PolygonProcessor.SwitchToNextState();
+
+        if (State == PolygonProcessor.ProcesssingState.ClippingComplete)
+        {
+            var result = PolygonProcessor.ResultPolygon;
+            if (result == null || result.OuterVertices.Count == 0)
+            {
+                ShowErrorMessage("No intersection found.");
+                return;
+            }
+            DrawPolygon(result);
+        }
+    }
+
+    private void OnClearButtonClicked()
+    {
+        PolygonProcessor.Reset();
+
+        JSRuntime.InvokeVoidAsync("clearCanvas");
+        _firstVertex = null;
+        _previousVertex = null;
+    }
+
+    private void DrawPoint(Vertex vertex)
+    {
+        JSRuntime.InvokeVoidAsync("drawPoint", vertex.X, vertex.Y, Color);
+    }
+
+    private void DrawLine(Vertex start, Vertex end)
+    {
+        JSRuntime.InvokeVoidAsync("drawLine", start.X, start.Y, end.X, end.Y, Color);
+    }
+
+    private void DrawPolygon(Polygon polygon)
+    {
+        DrawRing(polygon.OuterVertices);
+        foreach (var ring in polygon.InnerVertices)
+        {
+            DrawRing(ring);
+        }
+    }
+
+    private void DrawRing(List<Vertex> ring)
+    {
+        for (var i = 0; i < ring.Count - 1; i++)
+        {
+            DrawPoint(ring[i]);
+            DrawLine(ring[i], ring[i + 1]);
+        }
+        DrawPoint(ring[^1]);
+        DrawLine(ring[^1], ring[0]);
+    }
+
+    private async void ShowErrorMessage(string message)
+    {
+        await JSRuntime.InvokeVoidAsync("alert", message);
+    }
+}
