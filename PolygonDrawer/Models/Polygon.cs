@@ -75,7 +75,7 @@ public class Polygon
     private static void SortVertices(List<Vertex> vertices, bool isClockwise)
     {
         var area = CalculateSignedArea(vertices);
-        if (isClockwise && area > 0 || !isClockwise && area < 0)
+        if (isClockwise && area < 0 || !isClockwise && area > 0)
         {
             vertices.Reverse();
         }
