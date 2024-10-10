@@ -123,7 +123,7 @@ public class PolygonClipper
 
         // 判断交点是入点还是出点
         var mainNormal = new Vector(-mainDirection.Y, mainDirection.X);
-        bool isEntryPoint = Vector.DotProduct(mainNormal, clipDirection) < 0;
+        bool isEntryPoint = Vector.DotProduct(mainNormal, clipDirection) > 0;
 
         // 创建交点
         intersection = new Vertex(coordinate, isEntryPoint);
@@ -140,16 +140,15 @@ public class PolygonClipper
             endVertex = endVertex.Next!;
         }
 
-        var currentDistance = (intersection.Value - startVertex.Value).SquaredLength;
+        var intersectionDistance = (intersection.Value - startVertex.Value).SquaredLength;
         while (currentVertex.Next != endVertex)
         {
             var nextDistance = (currentVertex.Next!.Value - startVertex.Value).SquaredLength;
-            if (nextDistance > currentDistance)
+            if (nextDistance > intersectionDistance)
             {
                 break;
             }
             currentVertex = currentVertex.Next!;
-            currentDistance = nextDistance;
         }
 
         intersection.Next = currentVertex.Next;
