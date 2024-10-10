@@ -103,12 +103,12 @@
 
     private void DrawPoint(Vertex vertex)
     {
-        JSRuntime.InvokeVoidAsync("drawPoint", vertex.X, vertex.Y, Color);
+        JSRuntime.InvokeVoidAsync("drawPoint", vertex.Value.X, vertex.Value.Y, Color);
     }
 
     private void DrawLine(Vertex start, Vertex end)
     {
-        JSRuntime.InvokeVoidAsync("drawLine", start.X, start.Y, end.X, end.Y, Color);
+        JSRuntime.InvokeVoidAsync("drawLine", start.Value.X, start.Value.Y, end.Value.X, end.Value.Y, Color);
     }
 
     private void DrawPolygon(Polygon polygon)

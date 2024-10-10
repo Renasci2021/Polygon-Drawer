@@ -1,4 +1,5 @@
 using PolygonDrawer.Models;
+using PolygonDrawer.Algorithms;
 
 namespace PolygonDrawer.Controllers;
 
@@ -54,7 +55,7 @@ public class PolygonProcessor
                 break;
             case ProcesssingState.DrawingClipPolygon:
                 ClipPolygon.CompletePolygon();
-                Clip();
+                ResultPolygon = PolygonClipper.Clip(MainPolygon, ClipPolygon);
                 State = ProcesssingState.ClippingComplete;
                 break;
             default:
@@ -69,11 +70,5 @@ public class PolygonProcessor
         ClipPolygon = new();
         ResultPolygon = null;
         State = ProcesssingState.DrawingMainPolygon;
-    }
-
-    private void Clip()
-    {
-        ResultPolygon = MainPolygon;
-        // TODO: Implement clipping algorithm
     }
 }

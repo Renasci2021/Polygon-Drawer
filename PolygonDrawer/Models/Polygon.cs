@@ -8,7 +8,9 @@ public class Polygon
     public List<Vertex> OuterVertices { get; } = [];
     public List<List<Vertex>> InnerVertices { get; } = [];
 
-    public Vertex FirstVertexInCurrentRing => _currentRing == 0 ? OuterVertices[0] : InnerVertices[_currentRing][0];
+    public List<Vertex> AllVertices => AllRings.SelectMany(vertices => vertices).ToList();
+
+    private List<List<Vertex>> AllRings => [OuterVertices, .. InnerVertices];
 
     public void AddVertex(Vertex vertex)
     {
@@ -56,10 +58,10 @@ public class Polygon
         }
 
         // Sort vertices in each ring
-        SortVertices(OuterVertices, isClockwise: true);
+        SortVertices(OuterVertices, isClockwise: false);
         foreach (var innerVertices in InnerVertices)
         {
-            SortVertices(innerVertices, isClockwise: false);
+            SortVertices(innerVertices, isClockwise: true);
         }
 
         // Connect vertices in each ring
@@ -72,20 +74,20 @@ public class Polygon
 
     private static void SortVertices(List<Vertex> vertices, bool isClockwise)
     {
-        Point centroid = CalculateCentroid(vertices);
+        Vector centroid = CalculateCentroid(vertices);
         vertices.Sort((a, b) =>
         {
-            var angleA = Math.Atan2(a.Y - centroid.Y, a.X - centroid.X);
-            var angleB = Math.Atan2(b.Y - centroid.Y, b.X - centroid.X);
+            var angleA = Math.Atan2(a.Value.Y - centroid.Y, a.Value.X - centroid.X);
+            var angleB = Math.Atan2(b.Value.Y - centroid.Y, b.Value.X - centroid.X);
             return isClockwise ? angleA.CompareTo(angleB) : angleB.CompareTo(angleA);
         });
     }
 
-    private static Point CalculateCentroid(List<Vertex> vertices)
+    private static Vector CalculateCentroid(List<Vertex> vertices)
     {
-        double x = vertices.Sum(v => v.X) / vertices.Count;
-        double y = vertices.Sum(v => v.Y) / vertices.Count;
-        return new Point(x, y);
+        double x = vertices.Sum(v => v.Value.X) / vertices.Count;
+        double y = vertices.Sum(v => v.Value.Y) / vertices.Count;
+        return new Vector(x, y);
     }
 
     private static void ConnectVertices(List<Vertex> vertices)
