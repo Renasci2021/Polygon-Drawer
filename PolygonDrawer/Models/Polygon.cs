@@ -74,20 +74,11 @@ public class Polygon
 
     private static void SortVertices(List<Vertex> vertices, bool isClockwise)
     {
-        Vector centroid = CalculateCentroid(vertices);
-        vertices.Sort((a, b) =>
+        var area = CalculateSignedArea(vertices);
+        if (isClockwise && area > 0 || !isClockwise && area < 0)
         {
-            var angleA = Math.Atan2(a.Value.Y - centroid.Y, a.Value.X - centroid.X);
-            var angleB = Math.Atan2(b.Value.Y - centroid.Y, b.Value.X - centroid.X);
-            return isClockwise ? angleA.CompareTo(angleB) : angleB.CompareTo(angleA);
-        });
-    }
-
-    private static Vector CalculateCentroid(List<Vertex> vertices)
-    {
-        double x = vertices.Sum(v => v.Value.X) / vertices.Count;
-        double y = vertices.Sum(v => v.Value.Y) / vertices.Count;
-        return new Vector(x, y);
+            vertices.Reverse();
+        }
     }
 
     private static void ConnectVertices(List<Vertex> vertices)
@@ -96,5 +87,19 @@ public class Polygon
         {
             vertices[i].Next = vertices[(i + 1) % vertices.Count];
         }
+    }
+
+    private static double CalculateSignedArea(List<Vertex> vertices)
+    {
+        double area = 0;
+
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            var current = vertices[i];
+            var next = vertices[(i + 1) % vertices.Count];
+            area += (next.Value.X - current.Value.X) * (next.Value.Y + current.Value.Y);
+        }
+
+        return area / 2;
     }
 }

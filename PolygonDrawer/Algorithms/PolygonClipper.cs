@@ -103,7 +103,7 @@ public class PolygonClipper
         var determinant = mainDirection.X * clipDirection.Y - mainDirection.Y * clipDirection.X;
         if (Math.Abs(determinant) < 1e-6)
         {
-            return false;
+            return false;   // 两条线段平行，无交点
         }
 
         // 计算参数 t 和 u （参数方程的比例系数）
@@ -115,13 +115,18 @@ public class PolygonClipper
         // t 和 u 的取值范围均为 [0, 1] 表示交点在线段内
         if (t < 0 || t > 1 || u < 0 || u > 1)
         {
-            return false;
+            return false;   // 交点不在线段内
         }
 
-        // 计算交点坐标，并判断是否为入点
-        bool isEntryPoint = Vector.CrossProduct(mainDirection, clipDirection) > 0;
-        intersection = new(mainStart + t * mainDirection, isEntryPoint);
+        // 计算交点坐标
+        var coordinate = mainStart + t * mainDirection;
 
+        // 判断交点是入点还是出点
+        var mainNormal = new Vector(-mainDirection.Y, mainDirection.X);
+        bool isEntryPoint = Vector.DotProduct(mainNormal, clipDirection) < 0;
+
+        // 创建交点
+        intersection = new Vertex(coordinate, isEntryPoint);
         return true;
     }
 
