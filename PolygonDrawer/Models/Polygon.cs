@@ -83,10 +83,11 @@ public class Polygon
 
     private static void ConnectVertices(List<Vertex> vertices)
     {
-        for (int i = 0; i < vertices.Count; i++)
+        for (int i = 0; i < vertices.Count - 1; i++)
         {
-            vertices[i].Next = vertices[(i + 1) % vertices.Count];
+            vertices[i].Next = vertices[i + 1];
         }
+        vertices[^1].Next = vertices[0];
     }
 
     private static double CalculateSignedArea(List<Vertex> vertices)

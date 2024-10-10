@@ -1,4 +1,3 @@
-using Microsoft.UI.Composition;
 using PolygonDrawer.Models;
 using Vector = PolygonDrawer.Models.Vector;
 
@@ -107,10 +106,8 @@ public class PolygonClipper
         }
 
         // 计算参数 t 和 u （参数方程的比例系数）
-        var t = (clipStart.X - mainStart.X) * (clipEnd.Y - clipStart.Y) - (clipStart.Y - mainStart.Y) * (clipEnd.X - clipStart.X);
-        t /= (mainEnd.X - mainStart.X) * (clipEnd.Y - clipStart.Y) - (mainEnd.Y - mainStart.Y) * (clipEnd.X - clipStart.X);
-        var u = (clipStart.X - mainStart.X) * (mainEnd.Y - mainStart.Y) - (clipStart.Y - mainStart.Y) * (mainEnd.X - mainStart.X);
-        u /= (mainEnd.X - mainStart.X) * (clipEnd.Y - clipStart.Y) - (mainEnd.Y - mainStart.Y) * (clipEnd.X - clipStart.X);
+        var t = ((clipStart.X - mainStart.X) * (clipEnd.Y - clipStart.Y) - (clipStart.Y - mainStart.Y) * (clipEnd.X - clipStart.X)) / determinant;
+        var u = ((clipStart.X - mainStart.X) * (mainEnd.Y - mainStart.Y) - (clipStart.Y - mainStart.Y) * (mainEnd.X - mainStart.X)) / determinant;
 
         // t 和 u 的取值范围均为 [0, 1] 表示交点在线段内
         if (t < 0 || t > 1 || u < 0 || u > 1)
