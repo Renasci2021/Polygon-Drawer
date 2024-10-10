@@ -3,7 +3,7 @@
 @using PolygonDrawer.Models
 @using PolygonDrawer.Controllers
 
-<canvas id="polygonCanvas" width="1000" height="640" style="border:1px solid black;" @onclick="OnCanvasLeftClicked"
+<canvas id="polygonCanvas" width="1000" height="500" style="border:1px solid black;" @onclick="OnCanvasLeftClicked"
     @oncontextmenu="OnCanvasRightClicked"></canvas>
 
 <button @onclick="OnNextButtonClicked">Next</button>
@@ -36,7 +36,10 @@
 
             try
             {
-                PolygonProcessor.AddVertex(vertex);
+                if (!PolygonProcessor.AddVertex(vertex))
+                {
+                    return;
+                }
 
                 if (IsFirstVertex)
                 {
@@ -63,8 +66,10 @@
         // 右键点击闭合多边形
         try
         {
-            PolygonProcessor.ClosePolygon();
-
+            if (!PolygonProcessor.ClosePolygon())
+            {
+                return;
+            }
             DrawLine(_previousVertex!, _firstVertex!);
             _firstVertex = null;
             _previousVertex = null;
@@ -78,7 +83,15 @@
 
     private void OnNextButtonClicked()
     {
-        PolygonProcessor.SwitchToNextState();
+        try
+        {
+            PolygonProcessor.SwitchToNextState();
+        }
+        catch (InvalidOperationException ex)
+        {
+            ShowErrorMessage(ex.Message);
+            OnClearButtonClicked();
+        }
 
         if (State == PolygonProcessor.ProcesssingState.ClippingComplete)
         {

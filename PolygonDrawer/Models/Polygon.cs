@@ -34,7 +34,7 @@ public class Polygon
     {
         if (!_isAddingVertices)
         {
-            return;
+            throw new InvalidOperationException("Cannot close ring while not adding vertices.");
         }
 
         if (_currentRing == -1 && OuterVertices.Count < 3)
@@ -83,11 +83,10 @@ public class Polygon
 
     private static void ConnectVertices(List<Vertex> vertices)
     {
-        for (int i = 0; i < vertices.Count - 1; i++)
+        for (int i = 0; i < vertices.Count; i++)
         {
-            vertices[i].Next = vertices[i + 1];
+            vertices[i].Next = vertices[(i + 1) % vertices.Count];
         }
-        vertices[^1].Next = vertices[0];
     }
 
     private static double CalculateSignedArea(List<Vertex> vertices)

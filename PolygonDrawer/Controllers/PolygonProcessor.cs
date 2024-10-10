@@ -19,29 +19,33 @@ public class PolygonProcessor
 
     public ProcesssingState State { get; private set; } = ProcesssingState.DrawingMainPolygon;
 
-    public void AddVertex(Vertex vertex)
+    public bool AddVertex(Vertex vertex)
     {
         switch (State)
         {
             case ProcesssingState.DrawingMainPolygon:
                 MainPolygon.AddVertex(vertex);
-                break;
+                return true;
             case ProcesssingState.DrawingClipPolygon:
                 ClipPolygon.AddVertex(vertex);
-                break;
+                return true;
+            default:
+                return false;
         }
     }
 
-    public void ClosePolygon()
+    public bool ClosePolygon()
     {
         switch (State)
         {
             case ProcesssingState.DrawingMainPolygon:
                 MainPolygon.CloseRing();
-                break;
+                return true;
             case ProcesssingState.DrawingClipPolygon:
                 ClipPolygon.CloseRing();
-                break;
+                return true;
+            default:
+                return false;
         }
     }
 
