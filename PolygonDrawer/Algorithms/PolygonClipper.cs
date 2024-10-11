@@ -7,9 +7,12 @@ public class PolygonClipper
 {
     public static Polygon Clip(Polygon mainPolygon, Polygon clipPolygon)
     {
+        var ringsWithNoIntersections = FindAllRingsWithNoIntersections(mainPolygon, clipPolygon);
         var intersections = FindIntersections(mainPolygon, clipPolygon);
         AddIntersectionVertices(intersections);
-        return BuildResultPolygon(intersections);
+        var resultPolygon = BuildResultPolygon(intersections);
+        ringsWithNoIntersections.ForEach(resultPolygon.AddRing);
+        return resultPolygon;
     }
 
     private static List<Vertex> FindIntersections(Polygon mainPolygon, Polygon clipPolygon)
@@ -127,7 +130,7 @@ public class PolygonClipper
         return true;
     }
 
-    public static void ConnectIntersection(Vertex intersection, Vertex startVertex)
+    private static void ConnectIntersection(Vertex intersection, Vertex startVertex)
     {
         // 将交点插入到正确的位置
         var currentVertex = startVertex;
@@ -150,5 +153,43 @@ public class PolygonClipper
 
         intersection.Next = currentVertex.Next;
         currentVertex.Next = intersection;
+    }
+
+    private static List<List<Vertex>> FindAllRingsWithNoIntersections(Polygon mainPolygon, Polygon clipPolygon)
+    {
+        return clipPolygon.AllRings.Where(clipRing => IsRingInsidePolygon(clipRing, mainPolygon)).Concat(
+            mainPolygon.AllRings.Where(mainRing => IsRingInsidePolygon(mainRing, clipPolygon))).ToList();
+    }
+
+    private static bool IsRingInsidePolygon(List<Vertex> ring, Polygon polygon)
+    {
+        return IsRingInsideRing(ring, polygon.OuterVertices) &&
+                polygon.InnerVertices.All(innerRing => !IsRingInsideRing(ring, innerRing));
+    }
+
+    private static bool IsRingInsideRing(List<Vertex> innerRing, List<Vertex> outerRing)
+    {
+        return innerRing.All(vertex => IsPointInRing(vertex.Value, outerRing));
+    }
+
+    private static bool IsPointInRing(Vector point, List<Vertex> ring)
+    {
+        bool isInside = false;
+        int vertexCount = ring.Count;
+
+        for (int i = 0, j = vertexCount - 1; i < vertexCount; j = i++)
+        {
+            var vi = ring[i].Value;
+            var vj = ring[j].Value;
+
+            // 判断点是否在边的上下两端之间，并使用射线法计算交点
+            if (((vi.Y > point.Y) != (vj.Y > point.Y)) &&
+                (point.X < (vj.X - vi.X) * (point.Y - vi.Y) / (vj.Y - vi.Y) + vi.X))
+            {
+                isInside = !isInside; // 交点数奇偶切换
+            }
+        }
+
+        return isInside;
     }
 }

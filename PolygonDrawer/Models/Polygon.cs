@@ -5,12 +5,11 @@ public class Polygon
     private int _currentRing = -1;  // -1 means outer ring, 0 means first inner ring, etc.
     private bool _isAddingVertices = false;
 
-    public List<Vertex> OuterVertices { get; } = [];
-    public List<List<Vertex>> InnerVertices { get; } = [];
+    public List<Vertex> OuterVertices { get; private set; } = [];
+    public List<List<Vertex>> InnerVertices { get; private set; } = [];
 
     public List<Vertex> AllVertices => AllRings.SelectMany(vertices => vertices).ToList();
-
-    private List<List<Vertex>> AllRings => [OuterVertices, .. InnerVertices];
+    public List<List<Vertex>> AllRings => [OuterVertices, .. InnerVertices];
 
     public void AddVertex(Vertex vertex)
     {
@@ -70,6 +69,24 @@ public class Polygon
         {
             ConnectVertices(innerVertices);
         }
+    }
+
+    public void AddRing(List<Vertex> ring)
+    {
+        if (_isAddingVertices)
+        {
+            throw new InvalidOperationException("Cannot add ring while adding vertices.");
+        }
+
+        if (_currentRing == -1)
+        {
+            OuterVertices = ring;
+        }
+        else
+        {
+            InnerVertices.Add(ring);
+        }
+        _currentRing++;
     }
 
     private static void SortVertices(List<Vertex> vertices, bool isClockwise)
